@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useCart } from "../pages/cartContext";
 import axios from "axios";
 
@@ -129,7 +130,7 @@ const handleBuyNow = () => {
       setTimeout(() => setAlertVisible(false), 1500);
     });
 };
-
+const location = useLocation();
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: 40 }}>
