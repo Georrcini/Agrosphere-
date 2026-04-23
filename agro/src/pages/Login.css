@@ -1,0 +1,96 @@
+/* login.css */
+
+.login-container {
+  max-width: 400px;
+  margin: 80px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.9); /* semi-transparent background */
+  z-index: 1;
+  position: relative;
+}
+
+.login-page {
+  background-image: url('/login.jpg'); /* adjust path based on your structure */
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.login-button {
+  padding: 12px;
+  background: #7b1fa2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #555;
+}
+
+.login-link {
+  color: #7b1fa2;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 5px;
+}
+
+.error-message {
+  background-color: #ffe0e0;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.success-message {
+  background-color: #e0f2f1;
+  color: #00796b;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-align: center;
+}

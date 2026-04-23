@@ -1,0 +1,83 @@
+/* Register.css */
+.register-container {
+  height: 100vh;
+  width: 100vw;
+  background-image: url('C:\Users\geors\Desktop\full stack\Main project\complete\Agrosphere (2)\Agrosphere\agro\public\login.jpg'); /* ✅ Make sure 'login.jpg' is in your public folder */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-form-wrapper {
+  width: 350px;
+  padding: 2rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.2); /* translucent white */
+  backdrop-filter: blur(10px); /* blurred glass effect */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  color: #000;
+}
+
+.register-form-wrapper h2 {
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.register-form-wrapper input {
+  width: 75%;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+}
+
+.register-form-wrapper button {
+  width: 50%;
+  padding: 12px;
+  background-color: transparent;
+  border:" black";
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register-form-wrapper button:hover {
+  background-color: #edbb04;
+}
+
+.register-form-wrapper p {
+  margin-top: 1rem;
+  font-size: 14px;
+}
+
+.register-form-wrapper p a {
+  color: #fefefc;
+  text-decoration: none;
+}
+
+.register-form-wrapper p a:hover {
+  text-decoration: underline;
+}
+
+.register-message {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.register-message.error {
+  color: red;
+}
+
+.register-message.success {
+  color: green;
+}
