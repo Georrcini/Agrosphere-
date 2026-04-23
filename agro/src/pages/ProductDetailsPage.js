@@ -1,196 +1,196 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useCart } from "../pages/cartContext";
 import axios from "axios";
 
 const ProductDetailsPage = () => {
-  const { state } = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart } = useCart();
   const { id } = useParams();
 
-  const [product, setProduct] = useState(state || null);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("")
+  const [product, setProduct] = useState(location.state || null);
+  const [reviews, setReviews] = useState([]);
   const [userRating, setUserRating] = useState(0);
   const [userReview, setUserReview] = useState("");
-  const [reviews, setReviews] = useState([]);
   const [hoveredButton, setHoveredButton] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch product and reviews
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const showAlert = (msg) => {
+    setAlertMessage(msg);
+    setAlertVisible(true);
+    setTimeout(() => setAlertVisible(false), 1500);
+  };
+
+  // Fetch product + reviews
   useEffect(() => {
     if (!product && id) {
       axios
         .get(`http://localhost:8000/products/${id}/`)
-        .then(res => {
-          setProduct(res.data);
-        })
-        .catch(err => {
-          console.error("Failed to fetch product:", err);
-          navigate("/shopping");
-        });
+        .then((res) => setProduct(res.data))
+        .catch(() => navigate("/shopping"))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
 
     if (id) {
       axios
         .get(`http://localhost:8000/products/${id}/reviews/`)
-        .then(res => setReviews(res.data))
-        .catch(err => console.error("Failed to fetch reviews:", err));
+        .then((res) => setReviews(res.data))
+        .catch((err) => console.error(err));
     }
-  }, [id, product, navigate]);
+  }, [id]);
 
-  if (!product) return <div style={{ padding: 40 }}>Loading product...</div>;
+  if (loading) return <div style={{ padding: 40 }}>Loading product...</div>;
+  if (!product) return <div style={{ padding: 40 }}>Product not found</div>;
 
-  const { image, name, description, price, rating, soldCount } = product;
+  const { image, name, description, price, rating } = product;
 
+  // Convert price safely
+  const priceValue =
+    typeof price === "string"
+      ? parseFloat(price.replace(/[^0-9.]/g, ""))
+      : price;
+
+  // ADD TO CART
   const handleAddToCart = () => {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  if (!token) {
-    setAlertMessage("Please login to add items to cart.");
-    setAlertVisible(true);
-    setTimeout(() => {
-      setAlertVisible(false);
-      navigate("/login");
-    }, 1500);
-    return;
-  }
+    if (!token) {
+      showAlert("Please login to add items to cart.");
+      setTimeout(() => navigate("/login"), 1500);
+      return;
+    }
 
-  addToCart({
-    product_id: product.id,
-    quantity: 1,
-    description: "Added to cart",
-  });
+    addToCart({
+      product_id: product.id,
+      quantity: 1,
+    });
 
-  setAlertMessage(`${product.name} added to cart!`);
-  setAlertVisible(true);
-  setTimeout(() => setAlertVisible(false), 1500);
-};
-
-
-const handleBuyNow = () => {
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    setAlertMessage("Please login to buy items.");
-    setAlertVisible(true);
-    setTimeout(() => {
-      setAlertVisible(false);
-      navigate("/login", { state: { from: location.pathname } });
-    }, 1500);
-    return;
-  }
-
-  const item = { ...product, quantity: 1 };
-  const total = parseFloat(price.replace(/[^0-9.]/g, "")) * item.quantity;
-
-  navigate("/address", {
-    state: { cartItems: [item], orderTotal: total, fromBuyNow: true },
-  });
-};
-
-
-  const handleSubmitReview = () => {
-  if (userRating === 0 || userReview.trim() === "") return;
-
-  const token = localStorage.getItem("token");
-  if (!token) {
-    setAlertMessage("Please login to submit a review.");
-    setAlertVisible(true);
-    setTimeout(() => {
-      setAlertVisible(false);
-      navigate("/login", { state: { from: location.pathname } });
-    }, 1500);
-    return;
-  }
-
-  const newReview = {
-    rating: userRating,
-    comment: userReview.trim(),
-    product: parseInt(id),  // Only include this if your backend requires it
+    showAlert(`${name} added to cart!`);
   };
 
-  axios
-    .post(`http://localhost:8000/products/${id}/reviews/`, newReview, {
-      headers: {
-        Authorization: `Token ${token}`,
-        "Content-Type": "application/json",
+  // BUY NOW
+  const handleBuyNow = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      showAlert("Please login to buy items.");
+      setTimeout(() => navigate("/login"), 1500);
+      return;
+    }
+
+    const total = priceValue * 1;
+
+    navigate("/address", {
+      state: {
+        cartItems: [{ ...product, quantity: 1 }],
+        orderTotal: total,
+        fromBuyNow: true,
       },
-    })
-    .then((res) => {
-      setReviews([res.data, ...reviews]);
-      setUserRating(0);
-      setUserReview("");
-    })
-    .catch((err) => {
-      console.error("Failed to submit review:", err.response?.data || err.message);
-      setAlertMessage("Failed to submit review. Please try again.");
-      setAlertVisible(true);
-      setTimeout(() => setAlertVisible(false), 1500);
     });
-};
-const location = useLocation();
+  };
+
+  // SUBMIT REVIEW
+  const handleSubmitReview = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      showAlert("Please login to submit a review.");
+      setTimeout(() => navigate("/login"), 1500);
+      return;
+    }
+
+    if (userRating === 0 || userReview.trim() === "") return;
+
+    const newReview = {
+      rating: userRating,
+      comment: userReview.trim(),
+    };
+
+    axios
+      .post(
+        `http://localhost:8000/products/${id}/reviews/`,
+        newReview,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      )
+      .then((res) => {
+        setReviews([res.data, ...reviews]);
+        setUserRating(0);
+        setUserReview("");
+      })
+      .catch(() => showAlert("Failed to submit review"));
+  };
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: 40 }}>
+      {/* ALERT */}
       {alertVisible && (
-  <div style={{
-    position: "fixed", top: 20, left: "50%",
-    transform: "translateX(-50%)",
-    backgroundColor: "green", color: "white",
-    padding: "10px 20px", borderRadius: 5, zIndex: 1000
-  }}>
-    {alertMessage}
-  </div>
-)}
+        <div
+          style={{
+            position: "fixed",
+            top: 20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "green",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: 5,
+            zIndex: 1000,
+          }}
+        >
+          {alertMessage}
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 40 }}>
+        {/* IMAGE */}
         <div style={{ flex: 1 }}>
           <img
-            src={product.image}// Prefix added
-  alt={product.name}
-            style={{ width: "100%", height: 450, objectFit: "contain", borderRadius: 8 }}
+            src={image}
+            alt={name}
+            style={{
+              width: "100%",
+              height: 450,
+              objectFit: "contain",
+              borderRadius: 8,
+            }}
           />
         </div>
 
+        {/* DETAILS */}
         <div style={{ flex: 1 }}>
-          <h2 style={{ marginBottom: 10 }}>{name}</h2>
-          <p style={{ marginBottom: 20, color: "#444" }}>{description}</p>
-          <p style={{ fontSize: 24, fontWeight: "bold", marginBottom: 10 }}>
-            ₹{price}
-          </p>
-          <p style={{ marginBottom: 10 }}>
-            <span style={{
-              backgroundColor: "#d4edda", color: "#2e7d32",
-              padding: "4px 10px", borderRadius: 20,
-              fontWeight: "bold", fontSize: 14
-            }}>
-              ⭐ {rating}
-            </span>
-            &nbsp;
-            <span style={{ color: "#777", fontSize: 14 }}>
-              8067+ orders
-            </span>
-          </p>
-          <p style={{
-            backgroundColor: "#f1f3f4", padding: "5px 10px",
-            display: "inline-block", borderRadius: 4, fontSize: 13
-          }}>
-            Free Delivery
+          <h2>{name}</h2>
+          <p style={{ color: "#444" }}>{description}</p>
+
+          <h3>₹{priceValue}</h3>
+
+          <p>
+            ⭐ {rating} | 8000+ orders
           </p>
 
-          <div style={{ display: "flex", gap: 15, marginTop: 30 }}>
+          {/* BUTTONS */}
+          <div style={{ display: "flex", gap: 15, marginTop: 20 }}>
             <button
               onClick={handleAddToCart}
               onMouseEnter={() => setHoveredButton("cart")}
               onMouseLeave={() => setHoveredButton(null)}
               style={{
-                flex: 1, padding: 12,
-                backgroundColor: hoveredButton === "cart" ? "green" : "white",
+                flex: 1,
+                padding: 12,
+                background:
+                  hoveredButton === "cart" ? "green" : "white",
                 color: hoveredButton === "cart" ? "white" : "black",
-                border: "2px solid #0ca970", borderRadius: 6,
-                cursor: "pointer"
+                border: "2px solid #0ca970",
+                cursor: "pointer",
               }}
             >
               🛒 Add to Cart
@@ -201,11 +201,13 @@ const location = useLocation();
               onMouseEnter={() => setHoveredButton("buy")}
               onMouseLeave={() => setHoveredButton(null)}
               style={{
-                flex: 1, padding: 12,
-                backgroundColor: hoveredButton === "buy" ? "green" : "white",
+                flex: 1,
+                padding: 12,
+                background:
+                  hoveredButton === "buy" ? "green" : "white",
                 color: hoveredButton === "buy" ? "white" : "black",
-                border: "2px solid #0ca970", borderRadius: 6,
-                cursor: "pointer"
+                border: "2px solid #0ca970",
+                cursor: "pointer",
               }}
             >
               Buy Now
@@ -214,60 +216,66 @@ const location = useLocation();
         </div>
       </div>
 
+      {/* REVIEWS */}
       <div style={{ marginTop: 40 }}>
         <h3>Rate & Review</h3>
-        <div style={{ fontSize: 24, margin: "10px 0" }}>
-          {[1,2,3,4,5].map(n => (
+
+        {/* STARS */}
+        <div style={{ fontSize: 24 }}>
+          {[1, 2, 3, 4, 5].map((n) => (
             <span
               key={n}
               onClick={() => setUserRating(n)}
               style={{
+                cursor: "pointer",
                 color: n <= userRating ? "#f4b400" : "#ccc",
-                cursor: "pointer", marginRight: 5
               }}
-            >★</span>
+            >
+              ★
+            </span>
           ))}
         </div>
+
+        {/* TEXTAREA */}
         <textarea
-          rows={4}
           value={userReview}
-          onChange={e => setUserReview(e.target.value)}
-          placeholder="Write your review…"
-          style={{
-            width: "100%", padding: 10, borderRadius: 6,
-            border: "1px solid #ccc", fontSize: 14
-          }}
+          onChange={(e) => setUserReview(e.target.value)}
+          placeholder="Write review..."
+          style={{ width: "100%", padding: 10, marginTop: 10 }}
         />
+
         <button
           onClick={handleSubmitReview}
           style={{
-            marginTop: 10, padding: "10px 20px",
-            backgroundColor: "#7b1fa2", color: "white",
-            border: "none", borderRadius: 5, cursor: "pointer"
+            marginTop: 10,
+            padding: "10px 20px",
+            background: "#7b1fa2",
+            color: "white",
+            border: "none",
+            cursor: "pointer",
           }}
         >
           Submit Review
         </button>
 
-        {reviews.length > 0 && (
-          <div style={{ marginTop: 20 }}>
-            <h4>Customer Reviews</h4>
-            {reviews.map((r, i) => (
-              <div key={i} style={{
-                border: "1px solid #eee", padding: 10,
-                borderRadius: 5, marginBottom: 10
-              }}>
-                <div style={{ color: "#f4b400", marginBottom: 5 }}>
-                  {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
-                </div>
-                <p style={{ margin: "5px 0" }}>{r.comment}</p>
-                <small style={{ color: "#777" }}>
-                  {r.date || new Date().toLocaleString()}
-                </small>
+        {/* LIST */}
+        <div style={{ marginTop: 20 }}>
+          {reviews.map((r, i) => (
+            <div
+              key={i}
+              style={{
+                border: "1px solid #eee",
+                padding: 10,
+                marginBottom: 10,
+              }}
+            >
+              <div style={{ color: "#f4b400" }}>
+                {"★".repeat(r.rating)}
               </div>
-            ))}
-          </div>
-        )}
+              <p>{r.comment}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
