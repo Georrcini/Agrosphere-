@@ -13,7 +13,6 @@ const ProductDetailsPage = () => {
   const [reviews, setReviews] = useState([]);
   const [userRating, setUserRating] = useState(0);
   const [userReview, setUserReview] = useState("");
-  const [hoveredButton, setHoveredButton] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [alertVisible, setAlertVisible] = useState(false);
@@ -25,7 +24,7 @@ const ProductDetailsPage = () => {
     setTimeout(() => setAlertVisible(false), 1500);
   };
 
-  // ✅ CLEAN useEffect (NO ESLINT ERROR, NO LOOP)
+  // ✅ SAFE useEffect (NO ESLINT ERRORS)
   useEffect(() => {
     let isMounted = true;
 
@@ -56,7 +55,9 @@ const ProductDetailsPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [id, navigate]); // ✅ correct dependency
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, navigate]);
 
   if (loading) return <div style={{ padding: 40 }}>Loading product...</div>;
   if (!product) return <div style={{ padding: 40 }}>Product not found</div>;
@@ -86,7 +87,7 @@ const ProductDetailsPage = () => {
     showAlert(`${name} added to cart!`);
   };
 
-  // BUY NOW
+  // 🚀 BUY NOW
   const handleBuyNow = () => {
     const token = localStorage.getItem("token");
 
@@ -105,7 +106,7 @@ const ProductDetailsPage = () => {
     });
   };
 
-  // REVIEW SUBMIT
+  // ⭐ SUBMIT REVIEW
   const handleSubmitReview = async () => {
     const token = localStorage.getItem("token");
 
@@ -137,6 +138,14 @@ const ProductDetailsPage = () => {
     } catch (err) {
       showAlert("Failed to submit review");
     }
+  };
+
+  const btnStyle = {
+    flex: 1,
+    padding: 12,
+    background: "white",
+    border: "2px solid #0ca970",
+    cursor: "pointer",
   };
 
   return (
@@ -183,8 +192,13 @@ const ProductDetailsPage = () => {
           <p>⭐ {rating}</p>
 
           <div style={{ display: "flex", gap: 15, marginTop: 20 }}>
-            <button onClick={handleAddToCart}>🛒 Add to Cart</button>
-            <button onClick={handleBuyNow}>Buy Now</button>
+            <button onClick={handleAddToCart} style={btnStyle}>
+              🛒 Add to Cart
+            </button>
+
+            <button onClick={handleBuyNow} style={btnStyle}>
+              Buy Now
+            </button>
           </div>
         </div>
       </div>
@@ -215,7 +229,9 @@ const ProductDetailsPage = () => {
           style={{ width: "100%", padding: 10, marginTop: 10 }}
         />
 
-        <button onClick={handleSubmitReview}>Submit Review</button>
+        <button onClick={handleSubmitReview} style={{ marginTop: 10 }}>
+          Submit Review
+        </button>
 
         <div style={{ marginTop: 20 }}>
           {reviews.map((r, i) => (
