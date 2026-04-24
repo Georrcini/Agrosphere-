@@ -27,36 +27,36 @@ const ProductDetailsPage = () => {
 
   // 🚀 FIXED useEffect (NO ESLINT ERRORS)
   useEffect(() => {
-    let isMounted = true;
+  let isMounted = true;
 
-    const fetchData = async () => {
-      try {
-        if (!product && id) {
-          const res = await axios.get(
-            `http://localhost:8000/products/${id}/`
-          );
-          if (isMounted) setProduct(res.data);
-        }
-
-        if (id) {
-          const res2 = await axios.get(
-            `http://localhost:8000/products/${id}/reviews/`
-          );
-          if (isMounted) setReviews(res2.data);
-        }
-      } catch (err) {
-        navigate("/shopping");
-      } finally {
-        if (isMounted) setLoading(false);
+  const fetchData = async () => {
+    try {
+      if (!product && id) {
+        const res = await axios.get(
+          `http://localhost:8000/products/${id}/`
+        );
+        if (isMounted) setProduct(res.data);
       }
-    };
 
-    fetchData();
+      if (id) {
+        const res2 = await axios.get(
+          `http://localhost:8000/products/${id}/reviews/`
+        );
+        if (isMounted) setReviews(res2.data);
+      }
+    } catch (err) {
+      navigate("/shopping");
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  };
 
-    return () => {
-      isMounted = false;
-    };
-  }, [id, navigate]); // ✅ CLEAN DEPENDENCIES
+  fetchData();
+
+  return () => {
+    isMounted = false;
+  };
+}, [id, navigate]); // ✅ DO NOT add product
 
   if (loading) return <div style={{ padding: 40 }}>Loading product...</div>;
   if (!product) return <div style={{ padding: 40 }}>Product not found</div>;
