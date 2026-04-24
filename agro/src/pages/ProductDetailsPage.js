@@ -25,51 +25,50 @@ const ProductDetailsPage = () => {
     setTimeout(() => setAlertVisible(false), 1500);
   };
 
-  // 🚀 FIXED useEffect (NO ESLINT ERRORS)
+  // ✅ CLEAN useEffect (NO ESLINT ERROR, NO LOOP)
   useEffect(() => {
-  let isMounted = true;
+    let isMounted = true;
 
-  const fetchData = async () => {
-    try {
-      if (!product && id) {
-        const res = await axios.get(
-          `http://localhost:8000/products/${id}/`
-        );
-        if (isMounted) setProduct(res.data);
+    const fetchData = async () => {
+      try {
+        if (!product && id) {
+          const res = await axios.get(
+            `http://localhost:8000/products/${id}/`
+          );
+          if (isMounted) setProduct(res.data);
+        }
+
+        if (id) {
+          const res2 = await axios.get(
+            `http://localhost:8000/products/${id}/reviews/`
+          );
+          if (isMounted) setReviews(res2.data);
+        }
+      } catch (err) {
+        navigate("/shopping");
+      } finally {
+        if (isMounted) setLoading(false);
       }
+    };
 
-      if (id) {
-        const res2 = await axios.get(
-          `http://localhost:8000/products/${id}/reviews/`
-        );
-        if (isMounted) setReviews(res2.data);
-      }
-    } catch (err) {
-      navigate("/shopping");
-    } finally {
-      if (isMounted) setLoading(false);
-    }
-  };
+    fetchData();
 
-  fetchData();
-
-  return () => {
-    isMounted = false;
-  };
-}, [id, navigate]); // ✅ DO NOT add product
+    return () => {
+      isMounted = false;
+    };
+  }, [id, navigate]); // ✅ correct dependency
 
   if (loading) return <div style={{ padding: 40 }}>Loading product...</div>;
   if (!product) return <div style={{ padding: 40 }}>Product not found</div>;
 
   const { image, name, description, price, rating } = product;
 
-  // Safe price conversion
   const priceValue =
     typeof price === "string"
       ? parseFloat(price.replace(/[^0-9.]/g, ""))
       : price;
 
-  // ADD TO CART
+  // 🛒 ADD TO CART
   const handleAddToCart = () => {
     const token = localStorage.getItem("token");
 
@@ -106,7 +105,7 @@ const ProductDetailsPage = () => {
     });
   };
 
-  // SUBMIT REVIEW
+  // REVIEW SUBMIT
   const handleSubmitReview = async () => {
     const token = localStorage.getItem("token");
 
@@ -179,47 +178,13 @@ const ProductDetailsPage = () => {
         {/* DETAILS */}
         <div style={{ flex: 1 }}>
           <h2>{name}</h2>
-          <p style={{ color: "#444" }}>{description}</p>
-
+          <p>{description}</p>
           <h3>₹{priceValue}</h3>
+          <p>⭐ {rating}</p>
 
-          <p>⭐ {rating} | 8000+ orders</p>
-
-          {/* BUTTONS */}
           <div style={{ display: "flex", gap: 15, marginTop: 20 }}>
-            <button
-              onClick={handleAddToCart}
-              onMouseEnter={() => setHoveredButton("cart")}
-              onMouseLeave={() => setHoveredButton(null)}
-              style={{
-                flex: 1,
-                padding: 12,
-                background:
-                  hoveredButton === "cart" ? "green" : "white",
-                color: hoveredButton === "cart" ? "white" : "black",
-                border: "2px solid #0ca970",
-                cursor: "pointer",
-              }}
-            >
-              🛒 Add to Cart
-            </button>
-
-            <button
-              onClick={handleBuyNow}
-              onMouseEnter={() => setHoveredButton("buy")}
-              onMouseLeave={() => setHoveredButton(null)}
-              style={{
-                flex: 1,
-                padding: 12,
-                background:
-                  hoveredButton === "buy" ? "green" : "white",
-                color: hoveredButton === "buy" ? "white" : "black",
-                border: "2px solid #0ca970",
-                cursor: "pointer",
-              }}
-            >
-              Buy Now
-            </button>
+            <button onClick={handleAddToCart}>🛒 Add to Cart</button>
+            <button onClick={handleBuyNow}>Buy Now</button>
           </div>
         </div>
       </div>
@@ -228,7 +193,6 @@ const ProductDetailsPage = () => {
       <div style={{ marginTop: 40 }}>
         <h3>Rate & Review</h3>
 
-        {/* STARS */}
         <div style={{ fontSize: 24 }}>
           {[1, 2, 3, 4, 5].map((n) => (
             <span
@@ -244,7 +208,6 @@ const ProductDetailsPage = () => {
           ))}
         </div>
 
-        {/* TEXTAREA */}
         <textarea
           value={userReview}
           onChange={(e) => setUserReview(e.target.value)}
@@ -252,31 +215,11 @@ const ProductDetailsPage = () => {
           style={{ width: "100%", padding: 10, marginTop: 10 }}
         />
 
-        <button
-          onClick={handleSubmitReview}
-          style={{
-            marginTop: 10,
-            padding: "10px 20px",
-            background: "#7b1fa2",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Submit Review
-        </button>
+        <button onClick={handleSubmitReview}>Submit Review</button>
 
-        {/* LIST */}
         <div style={{ marginTop: 20 }}>
           {reviews.map((r, i) => (
-            <div
-              key={i}
-              style={{
-                border: "1px solid #eee",
-                padding: 10,
-                marginBottom: 10,
-              }}
-            >
+            <div key={i} style={{ padding: 10, border: "1px solid #eee" }}>
               <div style={{ color: "#f4b400" }}>
                 {"★".repeat(r.rating)}
               </div>
